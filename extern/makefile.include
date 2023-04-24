@@ -1,0 +1,5 @@
+EXTERN = $(COMMON_CODE_DIR)/library
+
+LIB_CPPUTEST=$(EXTERN)/cpputest/lib/libCppUTest.a $(EXTERN)/cpputest/lib/libCppUTestExt.a
+
+#TODO

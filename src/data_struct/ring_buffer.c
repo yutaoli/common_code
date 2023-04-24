@@ -113,8 +113,3 @@ int ring_buffer_size(ring_buffer *queue)
     else 
         return queue->tail + queue->size - queue->head;
 }
-
-int main()
-{
-    return 0;
-}
