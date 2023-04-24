@@ -8,6 +8,7 @@ SILENCE = @
 #---- Outputs ----#
 COMPONENT_NAME = common_code
 CPPUTEST_USE_EXTENSIONS = Y
+CPPUTEST_USE_MEM_LEAK_DETECTION = N
 
 #--- Inputs ----#
 #CPP_PLATFORM = gcc
