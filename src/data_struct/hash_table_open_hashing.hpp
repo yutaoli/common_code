@@ -97,11 +97,17 @@ class hash_table_open_hashing
                temp_kvs[i] = kvs[i];
            }
 
+           // resize
            delete []kvs;
            used = 0;
            size = 2 * size;
            kvs = new KV[size];
+           for(int i = 0; i < size;i++)
+           {
+               kvs[i].used = false;
+           }
 
+           // 构建新的kvs
            for(int i =0; i < temp_kvs_size; i++)
            {
                if(temp_kvs[i].used == true)
