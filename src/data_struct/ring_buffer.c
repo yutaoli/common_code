@@ -46,7 +46,7 @@ int ring_buffer_init(ring_buffer *queue, int size, unsigned char need_producer_l
         pthread_spin_init(&queue->consumer_lock, PTHREAD_PROCESS_PRIVATE);
 
     //DEBUG_LOG("%s,size:%d,need_producer_lock:%d,need_consumer_lock:%d",__FUNCTION__,size,need_producer_lock,need_consumer_lock);
-    printf("%s,size:%d,need_producer_lock:%d,need_consumer_lock:%d\n",__FUNCTION__,size,need_producer_lock,need_consumer_lock);
+    //printf("%s,size:%d,need_producer_lock:%d,need_consumer_lock:%d\n",__FUNCTION__,size,need_producer_lock,need_consumer_lock);
     return 0;
 }
 int ring_buffer_reset(ring_buffer *queue)
