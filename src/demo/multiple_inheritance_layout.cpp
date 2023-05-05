@@ -41,8 +41,12 @@ int main()
     Derive d;
 
     Fun pVtab = (Fun)*(int64_t *)*(int64_t *)&d;
-    printf("sizeof(Fun)=%d,sizeof(int)=%d,sizeof(int64_t*)=%d\n",
-            sizeof(Fun), sizeof(int), sizeof(int64_t *));
+    // (int64_t *)&d:取虚函数表指针的地址
+    // *(int64_t *)&d:取虚函数表指针
+    // (int64_t *)*(int64_t *)&d:因为虚函数表指针，其实是一个地址，这个地址的值是函数地址
+    // *(int64_t *)*(int64_t *)&d:这个地址的值是函数地址
+    printf("sizeof(Fun)=%d,sizeof(int)=%d,sizeof(int64_t*)=%d,sizeof(int *)=%d\n",
+            sizeof(Fun), sizeof(int), sizeof(int64_t *), sizeof(int *));
 
     //Base1's vtable
     int i = 0;
@@ -61,6 +65,8 @@ int main()
     //Base2's vtable
     int offset = 2;
     pVtab = (Fun)*(int64_t *)*((int64_t *)&d + offset);
+    // (int64_t *)&d:取虚函数表指针的地址
+    // (int64_t *)&d + offset):往下2个(int64_t *)的偏移量，一个是上面的虚函数表指针(8字节)，一个是Base1的a(因为要对齐，所以也是8个字节，和指针一样)
     i = 0;
     n = 3;
     while(n--)
