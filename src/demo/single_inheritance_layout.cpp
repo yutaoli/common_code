@@ -35,7 +35,6 @@ int main()
     int n = 5;
     
     // linux pVtab最后不为 NULL，所以要有n
-    //while(pVtab != NULL && n--)
     while(n--)
     {
         //printf("pVtab:%0x\n",pVtab);

@@ -40,7 +40,7 @@ class hash_table_open_hashing
         {
             if (used > factor * size)
             {
-                printf("%s,used:%d,factor:%lf,size:%d\n",__FUNCTION__,used,factor,size);
+                //printf("%s,used:%d,factor:%lf,size:%d\n",__FUNCTION__,used,factor,size);
                 rehash();
             }
 
@@ -89,7 +89,7 @@ class hash_table_open_hashing
 
         void rehash()
         {
-           printf("before rehash,used:%d,size:%d\n",used,size);
+           //printf("before rehash,used:%d,size:%d\n",used,size);
            int temp_kvs_size = size;
            KV *temp_kvs = new KV[temp_kvs_size];
            for(int i = 0; i < size; i++)
@@ -117,7 +117,7 @@ class hash_table_open_hashing
            }
 
            delete []temp_kvs;
-           printf("after rehash,used:%d,size:%d\n",used,size);
+           //printf("after rehash,used:%d,size:%d\n",used,size);
         }
 
         struct KV

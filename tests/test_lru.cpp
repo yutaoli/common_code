@@ -19,24 +19,54 @@ TEST_GROUP(lru)
 
 TEST(lru,test_ok)
 {
-    LRUCache ca(4);
+    lru ca(4);
      
-    ca.refer(1);
-    ca.refer(2);
-    ca.refer(3);
-    ca.refer(1);
-    ca.refer(4);
-    ca.refer(5);
+    ca.set(1, 1);
+    ca.set(2, 2);
+    ca.set(3, 3);
+    ca.set(4, 4);
+    ca.set(5, 5);// 5 4 3 2
 
-    list<int>::iterator it = ca.dq.begin();
-    CHECK(*it == 5) ;
-
-    it++;
-    CHECK(*it == 4);
+    std::list<std::pair<int, int> >::iterator it = ca.queue.begin();
+    CHECK(it->first == 5 && it->second == 5) ;
 
     it++;
-    CHECK(*it == 1);
+    CHECK(it->first == 4 && it->second == 4);
 
     it++;
-    CHECK(*it == 3);
+    CHECK(it->first == 3 && it->second == 3);
+
+    it++;
+    CHECK(it->first == 2 && it->second == 2);
+
+    int value = ca.get(1);
+    CHECK(value == -1);
+
+    value = ca.get(2);// 2 5 4 3
+    CHECK(value == 2);
+
+    it = ca.queue.begin();
+    CHECK(it->first == 2 && it->second == 2) ;
+
+    it++;
+    CHECK(it->first == 5 && it->second == 5);
+
+    it++;
+    CHECK(it->first == 4 && it->second == 4);
+
+    it++;
+    CHECK(it->first == 3 && it->second == 3);
+
+    ca.set(4, 8);// 4 2 5 3
+    it = ca.queue.begin();
+    CHECK(it->first == 4 && it->second == 8) ;
+
+    it++;
+    CHECK(it->first == 2 && it->second == 2);
+
+    it++;
+    CHECK(it->first == 5 && it->second == 5);
+
+    it++;
+    CHECK(it->first == 3 && it->second == 3);
 }

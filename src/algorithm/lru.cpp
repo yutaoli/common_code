@@ -1,44 +1,53 @@
-#include <iostream>
+#include <stdio.h>
 #include "lru.h"
 
-// Declare the size
-LRUCache::LRUCache(int n) { csize = n; }
- 
-// Refers key x with in the LRU cache
-void LRUCache::refer(int x)
+lru::lru(int size_){size = size_;}
+lru::~lru(){}
+
+// 如果没有，返回-1
+int lru::get(int key)
 {
-    // not present in cache
-    if (ma.find(x) == ma.end()) {
-        // cache is full
-        if (dq.size() == (size_t)csize) {
-            // delete least recently used element
-            int last = dq.back();
- 
-            // Pops the last element
-            dq.pop_back();
- 
-            // Erase the last
-            ma.erase(last);
+    std::map<int, std::list<std::pair<int, int> >::iterator>::iterator m_it = key2it.find(key);
+    if(m_it == key2it.end())
+    {
+        return -1;
+    }
+
+    queue.push_front(*(m_it->second));
+    queue.erase(m_it->second);
+    key2it[key] = queue.begin();
+    return queue.begin()->second;
+}
+
+void lru::set(int key, int value)
+{
+    std::map<int, std::list<std::pair<int, int> >::iterator>::iterator m_it = key2it.find(key);
+    if(m_it == key2it.end())
+    {
+        if(queue.size() == (size_t)size)
+        {
+            std::pair<int,int> last = queue.back();
+            queue.pop_back();
+            key2it.erase(last.first);
+            //return;
         }
     }
- 
-    // present in cache
-    else
-        dq.erase(ma[x]);
- 
-    // update reference
-    dq.push_front(x);
-    ma[x] = dq.begin();
+    else 
+    {
+        queue.erase(m_it->second);
+    }
+
+    std::pair<int, int> new_pair = std::make_pair(key,value);
+    queue.push_front(new_pair);
+    key2it[key] = queue.begin();
 }
- 
-// Function to display contents of cache
-void LRUCache::display()
+
+void lru::display()
 {
- 
-    // Iterate in the deque and print
-    // all the elements in it
-    for (auto it = dq.begin(); it != dq.end(); it++)
-        cout << (*it) << " ";
- 
-    cout << endl;
+    for(auto it = queue.begin(); it  != queue.end(); it++)
+    {
+        printf("%d ", it->first);
+    }
+    printf("\n");
 }
+

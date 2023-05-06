@@ -3,22 +3,22 @@
 
 //#include <bits/stdc++.h>
 #include <list>
-#include <unordered_map>
-using namespace std;
+#include <map>
 
-class LRUCache {
-public:
-    // store keys of cache
-    list<int> dq;
- 
-    // store references of key in cache
-    unordered_map<int, list<int>::iterator> ma;
-    int csize; // maximum capacity of cache
- 
-public:
-    LRUCache(int);
-    void refer(int);
-    void display();
+class lru
+{
+    public:
+        lru(int size_);
+        virtual ~ lru();
+
+        // 如果没有，返回-1
+        int get(int key);
+        void set(int key, int value);
+        void display();
+
+        std::list<std::pair<int, int> > queue;
+        std::map<int, std::list<std::pair<int, int> >::iterator> key2it;
+        int size;
 };
 
 #endif
