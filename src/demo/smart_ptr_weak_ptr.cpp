@@ -29,11 +29,11 @@ int main()
  [root@ecs-KwUzX demo]# make smart_ptr_weak_ptr 
  Make smart_ptr_weak_ptr begin......g++  smart_ptr_weak_ptr.cpp -o smart_ptr_weak_ptr  -g -Xlinker "-("  -Xlinker "-)" 
  ok.
- [root@ecs-KwUzX demo]# ./smart_ptr_weak_ptr // 调用析构函数
+ [root@ecs-KwUzX demo]# ./smart_ptr_weak_ptr // 调用析构函数，new出来的Node()，被释放
  ~Node
  ~Node
 
- // 检查内存泄露情况
+ // 检查内存泄露情况：没有泄露内存
  [root@ecs-KwUzX demo]# valgrind --leak-check=full --log-file=valgrind_smart_ptr_weak_ptr.log ./smart_ptr_weak_ptr
 
  [root@ecs-KwUzX demo]# cat valgrind_smart_ptr_weak_ptr.log 

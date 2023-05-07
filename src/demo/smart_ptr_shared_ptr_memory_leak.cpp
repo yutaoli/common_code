@@ -30,9 +30,9 @@ int main()
  Make smart_ptr_shared_ptr_memory_leak begin......g++  smart_ptr_shared_ptr_memory_leak.cpp -o smart_ptr_shared_ptr_memory_leak  -g -Xlinker "-("  -Xlinker "-)" 
  ok.
  [root@ecs-KwUzX demo]# ./smart_ptr_shared_ptr_memory_leak 
- // 没有输出任何数据，即没有调用析构函数
+ // 没有输出任何数据，即没有调用析构函数，new出来的Node()的内存，没有释放
 
- // 检查内存泄露情况：
+ // 检查内存泄露情况：泄露了96B内存
  [root@ecs-KwUzX demo]# valgrind --leak-check=full --log-file=valgrind_smart_ptr_shared_ptr_memory_leak.log -s ./smart_ptr_shared_ptr_memory_leak
 
  [root@ecs-KwUzX demo]# cat  valgrind_smart_ptr_shared_ptr_memory_leak.log 
