@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 struct Node {
-    std::weak_ptr<Node> next;
+    std::weak_ptr<Node> next;// 改了这里，原来是std::shared_ptr<Node> next
     int value;
 
     virtual ~ Node()
