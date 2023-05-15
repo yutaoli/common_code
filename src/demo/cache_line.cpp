@@ -330,3 +330,17 @@ int main()
 	test_locked_padded_array();
 	test_atomic_padded_array();
 }
+/*
+ [root@ecs-KwUzX demo]# ./cache_line 
+ counter is: 10000000
+ test_counter,timediff:sec:3,nsec:442594063
+
+ locked_array counter is: 10000000
+ test_locked_array,timediff:sec:2,nsec:291894377
+
+ locked_padded_array counter is: 10000000
+ test_locked_padded_array,timediff:sec:2,nsec:293857149
+
+ atomic_padded_array counter is: 10000000
+ test_atomic_padded_array,timediff:sec:0,nsec:805975962
+ */
