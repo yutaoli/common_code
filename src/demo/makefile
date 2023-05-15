@@ -3,7 +3,9 @@ include $(TRADE_DIR)/library/makefile.include
 BINARY = $(patsubst %.cpp,%,$(wildcard *.cpp))
 
 INC+=
-LIB+=
+LIB+= -lrt -lpthread
+
+CFLAGS+= -std=c++17
 
 all:$(BINARY)
 
