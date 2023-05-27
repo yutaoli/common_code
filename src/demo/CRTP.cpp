@@ -21,6 +21,8 @@ public:
 
 int main() {
     Derived d;
+    Derived d2;
     d.foo();  // 调用派生类的 fooImpl 函数
+    d2.foo();  // 调用派生类的 fooImpl 函数
     return 0;
 }
