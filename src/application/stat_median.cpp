@@ -46,11 +46,9 @@ void StatMedian::Add(unsigned int delay_us)
 
 void StatMedian::Sort()
 {
-    sort_data_.resize(data_.size());
-    sort_data_[0] = data_[0];
     for(unsigned int i = 1; i < data_.size(); i++)
     {
-        sort_data_[i] = sort_data_[i - 1] + data_[i];
+        data_[i] = data_[i - 1] + data_[i];
     }
 }
  int StatMedian::Median(unsigned int &result)
@@ -81,19 +79,19 @@ void StatMedian::Sort()
 
     // ranking == a[lower_bound], return lower_bound;
     // ranking != a[lower_bound], return upper_bound;
-    v_it= std::lower_bound(sort_data_.begin(), sort_data_.end(), ranking);
-    if(v_it == sort_data_.end()) return -2;
+    v_it= std::lower_bound(data_.begin(), data_.end(), ranking);
+    if(v_it == data_.end()) return -2;
 
-    unsigned int index = v_it - sort_data_.begin();
-    if(sort_data_[index] != ranking)
+    unsigned int index = v_it - data_.begin();
+    if(data_[index] != ranking)
     {
-        v_it = std::upper_bound(sort_data_.begin(), sort_data_.end(), ranking);
-        if(v_it == sort_data_.end())
+        v_it = std::upper_bound(data_.begin(), data_.end(), ranking);
+        if(v_it == data_.end())
         {
             //printf("fatal error,v_it == sort_data_.end(),ratio:%lf,size:%u,ranking:%u",ratio,SampleCount(),ranking);
             return -3;
         }
-        index = v_it - sort_data_.begin();
+        index = v_it - data_.begin();
     }
 
     result = index * delta_;
@@ -101,7 +99,7 @@ void StatMedian::Sort()
     x,ranking,index,result);*/
     return 0;
 }
-unsigned int StatMedian::SampleCount()
+unsigned long long StatMedian::SampleCount()
 {
     return sample_count_;
 }

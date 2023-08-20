@@ -23,19 +23,17 @@ void Sort();
 
  public:
 unsigned long long Count(unsigned int index){return data_[index];}
-unsigned long long SortCount(unsigned int index){return sort_data_[index];}
 unsigned int Size(){return max_size_ / delta_ + (max_size_ % delta_ != 0); }
 private:
  int MedianOfX(int x,unsigned int &result);
-  unsigned int SampleCount();
+  unsigned long long SampleCount();
 
 private:
 std::vector<unsigned long long> data_;
-std::vector<unsigned long long> sort_data_;
 unsigned int delta_;
 unsigned int max_size_;
 
-unsigned int sample_count_;
+unsigned long long sample_count_;
 };
 /*
 StatMedian stat_median;
