@@ -16,7 +16,11 @@ PROJECT_HOME_DIR = .
 
 SRC_DIRS = src/algorithm \
 		   src/data_struct \
-       src/application \
+		   src/data_struct/ringbuffer \
+		   src/application \
+		   src/os \
+		   src/network \
+		   src/db \
 
 #BIN_SRC_DIRS = tests \
 #	old_test \
@@ -29,7 +33,11 @@ INCLUDE_DIRS =\
   .\
   src/algorithm \
   src/data_struct \
+  src/data_struct/ringbuffer \
   src/application \
+  src/os \
+  src/network \
+  src/db \
   $(CPPUTEST_HOME)/include \
 
 #MOCKS_SRC_DIRS = \
