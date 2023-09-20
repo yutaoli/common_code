@@ -57,7 +57,7 @@ out.size(M);
 unsigned int seed = time(NULL);// 只能调用一次
 NChooseM_r(N, M, out, &seed);// 可以调用N次；
 
-2、Shuffle:
+2、Shuffle_r:
 int N = 10;
 std::vector<unsigned int> out;
 out.resize(N);
