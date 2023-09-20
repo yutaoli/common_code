@@ -197,3 +197,146 @@ TEST(Random, TestShuffle_100wCaseOk)
 
     */
 }
+
+// 从N个数中随机选M个数
+TEST(Random, TestNChooseM_r_100wCaseOk)
+{
+    unsigned int N = 100;
+    unsigned int M = 9;
+    std::vector<unsigned int> out;
+
+    //printf("rand:%d,RAND_MAX:%d,Rand64:%lld\n",rand(),RAND_MAX,Rand64());
+
+    std::vector<unsigned int> counts;
+    counts.resize(N);
+    for(unsigned int i = 0; i < N; i++)
+    {
+        counts[i] = 0;
+    }
+
+    int ret = 0;
+    int left = 1000000;
+    unsigned int seed = time(NULL);
+    while(left--)
+    {
+        ret = NChooseM_r(N, M, out, &seed);
+        CHECK(ret == 0);
+        for (unsigned int i = 0; i < out.size(); i++)
+        {
+            counts[out[i]]++;
+        }
+    }
+
+    /*for(unsigned int i = 0; i < N; i++)
+    {
+       printf("counts[%u]:%u\n",i,counts[i]);
+    }
+    printf("\n");*/
+
+    CHECK(counts[0] != 0);
+    double ratio = 0;
+    for(unsigned int i = 1; i < N; i++)
+    {
+        CHECK(counts[i] != 0);
+        if(counts[i] > counts[0])
+        {
+            ratio = double(counts[0])/counts[i];
+        }
+        else 
+        {
+            ratio = double(counts[i])/counts[0];
+        }
+        CHECK(ratio > 0.98);
+        /*printf("ratio[%u]:%lf\n",i, ratio);
+        if(ratio <= 0.98)
+        {
+            printf("===ratio[%u]:%lf\n",i, ratio);
+        }*/
+    }
+}
+
+TEST(Random, TestShuffle_r_100wCaseOk)
+{
+    unsigned int seed = time(NULL);
+    unsigned int N = 10;
+    std::vector<std::vector<unsigned int> > values;
+    values.resize(N);
+    for(unsigned int i = 0; i < N; i++)
+    {
+        values[i].resize(N);
+    }
+
+    std::vector<unsigned int> out;
+    out.resize(N);
+
+    int left = 1000000;
+    while(left--)
+    {
+        for (unsigned int i = 0; i < N; i++)
+        {
+            out[i] = i;
+        }
+
+        Shuffle_r(out, &seed);
+        for (unsigned int i = 0; i < N; i++)
+        {
+            values[out[i]][i]++;
+        }
+    }
+
+    /*printf("\n");
+    for (unsigned int i = 0; i < N; i++)
+    {
+        printf("%03u:", i);
+        for (unsigned int j = 0; j < N; j++)
+        {
+            printf("%09u ", values[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");*/
+
+    // 每一行都和第[0]个元素比；
+    for(unsigned int i = 0; i < N; i++)
+    {
+        CHECK(values[i][0] != 0);
+        double ratio = 0;
+
+        //printf("%03u:", i);
+        for(unsigned int j = 1; j < N; j++)
+        {
+            CHECK(values[i][j] != 0);
+            if(values[i][0] > values[i][j])
+            {
+                ratio = double(values[i][j])/values[i][0];
+            }
+            else 
+            {
+                ratio = double(values[i][0])/values[i][j];
+            }
+            //printf("%09lf ", ratio);
+            CHECK(ratio > 0.98);
+        }
+        //printf("\n");
+    }
+
+    // 每列比：values[0][0]与values[1][0],...values[n][0]比，即每个代表都和values[0][0]（第0行的代表比）
+    //printf("\n");
+    double ratio = 0;
+    CHECK(values[0][0] != 0);
+    for(unsigned int i = 1; i < N; i++)
+    {
+        CHECK(values[i][0] != 0);
+        if(values[i][0] > values[0][0])
+        {
+            ratio = double(values[0][0])/values[i][0];
+        }
+        else 
+        {
+            ratio = double(values[i][0])/values[0][0];
+        }
+        //printf("%09lf ", ratio);
+        CHECK(ratio > 0.98);
+    }
+    //printf("\n");
+}
