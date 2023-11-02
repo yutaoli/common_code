@@ -1,11 +1,11 @@
-include $(TRADE_DIR)/library/makefile.include
+include $(COMMON_CODE_DIR)/extern/makefile.include
 
 BINARY = $(patsubst %.cpp,%,$(wildcard *.cpp))
 
 INC+=
 LIB+= -lrt -lpthread
 
-CFLAGS+= -std=c++17
+CFLAGS+= -std=c++11
 
 all:$(BINARY)
 
