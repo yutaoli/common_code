@@ -10,6 +10,14 @@ COMPONENT_NAME = common_code
 CPPUTEST_USE_EXTENSIONS = Y
 CPPUTEST_USE_MEM_LEAK_DETECTION = N
 
+#--- Target platform---
+BOOL_OS_IS_LINUX="$(shell  uname -a |grep x86_64|wc -l )"
+
+TARGET_PLATFORM=x86
+ifeq ($(BOOL_OS_IS_LINUX), "0")
+TARGET_PLATFORM=arm
+endif
+
 #--- Inputs ----#
 #CPP_PLATFORM = gcc
 PROJECT_HOME_DIR = .
@@ -43,9 +51,10 @@ INCLUDE_DIRS =\
 #MOCKS_SRC_DIRS = \
 #	mocks \
 	
-CPPUTEST_WARNINGFLAGS = -Wall -Wswitch-default -Werror 
-CPPUTEST_CFLAGS += -fPIC 
+CPPUTEST_WARNINGFLAGS = -Wall -Wswitch-default -Werror
+CPPUTEST_CFLAGS += -fPIC
 #CPPUTEST_CFLAGS += -Wall -Wstrict-prototypes -pedantic
+CPPUTEST_CPPFLAGS += -fPIC -fpermissive -w
 LD_LIBRARIES = -lpthread -lrt $(LIB_CRC)
 	
   
