@@ -76,7 +76,7 @@ int TestThreadSignalNotIgnore()
 
 int main()
 {
-    TestThreadSignalIgnore();
+    TestThreadSignalIgnore();// 多发几次ctrl-c会发现只有主线程会进入信号处理函数
     //TestThreadSignalNotIgnore();// 多发几次ctrl-c会发现每个线程都有可能跳转到信号处理函数
     // TODO
     return 0;
