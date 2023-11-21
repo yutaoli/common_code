@@ -35,7 +35,7 @@ int File::GetFileSize(const char* file_name, size_t &file_size, std::string &err
 }
 int File::ReadTheWholeFile(const char *file_name, std::string &file_out,std::string &errmsg)
 {
-        file_out.clear();
+    file_out.clear();
     size_t file_size = 0;
     int ret = GetFileSize(file_name, file_size, errmsg);
     if (ret != 0)
@@ -104,7 +104,7 @@ int File::ReadTheWholeFile(const char *file_name, char *buffer, size_t &buffer_s
 
 end:
     fclose(fp);
-    return 0;
+    return ret;
 }
 
 int File::WriteTheWholeFile(const char *file_name, const char *buffer, size_t buffer_size, std::string &errmsg)
