@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sys/time.h>
-
+#include <thread>
 typedef struct timediff
 {
     timediff(std::string prompt_)
@@ -68,6 +68,52 @@ int TestChrono()
     return 0;
 }
 
+int TestChronoNoEpoch()
+{
+    timediff_t timediff(__FUNCTION__);
+    for (unsigned int i = 0; i < kRunTime; i++)
+    {
+        std::chrono::time_point<std::chrono::high_resolution_clock> t0 = std::chrono::high_resolution_clock::now();
+        // auto nanosec = t0.time_since_epoch();
+
+        // printf("now nano:%llu\n", nanosec.count());
+    }
+    return 0;
+}
+
+int TestDivide()
+{
+    timediff_t timediff(__FUNCTION__);
+    for (unsigned int i = 0; i < kRunTime; i++)
+    {
+        int a = rand() % 100;
+        // auto nanosec = t0.time_since_epoch();
+
+        // printf("now nano:%llu\n", nanosec.count());
+    }
+    return 0;
+}
+
+int TestChronoNoEpochDiff()
+{
+    timediff_t timediff(__FUNCTION__);
+    for (unsigned int i = 0; i < kRunTime; i++)
+    {
+        std::chrono::time_point<std::chrono::high_resolution_clock> t0 = std::chrono::high_resolution_clock::now();
+
+        std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::chrono::time_point<std::chrono::high_resolution_clock> t1 = std::chrono::high_resolution_clock::now();
+
+        long long diff = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+        //printf("diff:%lldns\n", diff); // diff:52619ns
+        // auto nanosec = t0.time_since_epoch();
+
+        // printf("now nano:%llu\n", nanosec.count());
+    }
+    return 0;
+}
+
 int TestClockGetTimeExpandVarialbe()
 {
     timediff_t timediff(__FUNCTION__);
@@ -125,21 +171,21 @@ int TestGetTimeOfDayExpandVarialbe()
 }
 int TestLocalTime()
 {
-     timediff_t timediff(__FUNCTION__);
+    timediff_t timediff(__FUNCTION__);
     for (unsigned int i = 0; i < kRunTime; i++)
     {
-    struct timespec ts = {0, 0};
-    clock_gettime(CLOCK_REALTIME, &ts);
-    struct tm stm = {0};
-  localtime_r(&ts.tv_sec, &stm);
-  //printf("%d-%02d-%02d %02d:%02d:%02d.%03d.%03d.%03d\n", stm.tm_year + 1900, stm.tm_mon + 1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, ts.tv_nsec/1000000,(ts.tv_nsec/1000)%1000,ts.tv_nsec%1000);
+        struct timespec ts = {0, 0};
+        clock_gettime(CLOCK_REALTIME, &ts);
+        struct tm stm = {0};
+        localtime_r(&ts.tv_sec, &stm);
+        // printf("%d-%02d-%02d %02d:%02d:%02d.%03d.%03d.%03d\n", stm.tm_year + 1900, stm.tm_mon + 1, stm.tm_mday, stm.tm_hour, stm.tm_min, stm.tm_sec, ts.tv_nsec/1000000,(ts.tv_nsec/1000)%1000,ts.tv_nsec%1000);
     }
     return 0;
 }
 
 int TestClockExpandVarialbe()
 {
-      timediff_t timediff(__FUNCTION__);
+    timediff_t timediff(__FUNCTION__);
     for (unsigned int i = 0; i < kRunTime; i++)
     {
         time(NULL);
@@ -157,15 +203,23 @@ int main()
     TestGetTimeOfDayExpandVarialbe();
     TestLocalTime();
     TestClockExpandVarialbe();
+
+    TestChronoNoEpoch();
+    TestDivide();
+    TestChronoNoEpochDiff();
     return 0;
 }
 /*
-TestChrono,timediff:sec:0,nsec:3098616
-TestClockGetTime,timediff:sec:0,nsec:2980287
-TestChronoExpandVarialbe,timediff:sec:0,nsec:3590065
-TestClockGetTimeExpandVarialbe,timediff:sec:0,nsec:2769297
-TestGetTimeOfDay,timediff:sec:0,nsec:3187516
-TestGetTimeOfDayExpandVarialbe,timediff:sec:0,nsec:2923246
-TestLocalTime,timediff:sec:0,nsec:31766880
-TestClockExpandVarialbe,timediff:sec:0,nsec:3251685
+TestChrono,timediff:sec:0,nsec:3170315
+TestClockGetTime,timediff:sec:0,nsec:2945570
+TestChronoExpandVarialbe,timediff:sec:0,nsec:3384861
+TestClockGetTimeExpandVarialbe,timediff:sec:0,nsec:2829752
+TestGetTimeOfDay,timediff:sec:0,nsec:3174705
+TestGetTimeOfDayExpandVarialbe,timediff:sec:0,nsec:2923100
+TestLocalTime,timediff:sec:0,nsec:31845969
+TestClockExpandVarialbe,timediff:sec:0,nsec:3336211
+TestChronoNoEpoch,timediff:sec:0,nsec:3153876
+TestDivide,timediff:sec:0,nsec:1962550
+TestChronoNoEpochDiff,timediff:sec:5,nsec:638835196
+说明sleep_for()最小精度是50us
 */
