@@ -94,7 +94,7 @@ int TestDivide()
     return 0;
 }
 
-int TestChronoNoEpochDiff()
+int TestChronoNoEpochSleepDiff()
 {
     timediff_t timediff(__FUNCTION__);
     for (unsigned int i = 0; i < kRunTime; i++)
@@ -105,8 +105,32 @@ int TestChronoNoEpochDiff()
         // std::this_thread::sleep_for(std::chrono::microseconds(100));
         std::chrono::time_point<std::chrono::high_resolution_clock> t1 = std::chrono::high_resolution_clock::now();
 
-        long long diff = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-        //printf("diff:%lldns\n", diff); // diff:52619ns
+        long long diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+        //printf("%s,diff_ns:%lldns\n", __FUNCTION__,diff_ns); // diff_ns:303ns
+        // auto nanosec = t0.time_since_epoch();
+
+        // printf("now nano:%llu\n", nanosec.count());
+    }
+    return 0;
+}
+
+int TestChronoNoEpochYieldDiff()
+{
+    timediff_t timediff(__FUNCTION__);
+    for (unsigned int i = 0; i < kRunTime; i++)
+    {
+        std::chrono::time_point<std::chrono::high_resolution_clock> t0 = std::chrono::high_resolution_clock::now();
+
+        // 类似sleep 100ns
+        while(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - t0).count() < 100)
+        {
+            std::this_thread::yield();
+        }// 能精确到ns的类似sleep功能，但会占CPU
+
+        std::chrono::time_point<std::chrono::high_resolution_clock> t1 = std::chrono::high_resolution_clock::now();
+
+        long long diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
+        //printf("%s,diff_ns:%lldns\n", __FUNCTION__,diff_ns); // diff_ns:52619ns
         // auto nanosec = t0.time_since_epoch();
 
         // printf("now nano:%llu\n", nanosec.count());
@@ -206,7 +230,8 @@ int main()
 
     TestChronoNoEpoch();
     TestDivide();
-    TestChronoNoEpochDiff();
+    TestChronoNoEpochSleepDiff();
+    TestChronoNoEpochYieldDiff();
     return 0;
 }
 /*
@@ -220,6 +245,7 @@ TestLocalTime,timediff:sec:0,nsec:31845969
 TestClockExpandVarialbe,timediff:sec:0,nsec:3336211
 TestChronoNoEpoch,timediff:sec:0,nsec:3153876
 TestDivide,timediff:sec:0,nsec:1962550
-TestChronoNoEpochDiff,timediff:sec:5,nsec:638835196
-说明sleep_for()最小精度是50us
+TestChronoNoEpochSleepDiff,timediff:sec:5,nsec:638835196 说明sleep_for()最小精度是50us
+TestChronoNoEpochYieldDiff,timediff:sec:0,nsec:105413402 说明yield可以精确用来实现sleep到ns，但会占CPU
+
 */
