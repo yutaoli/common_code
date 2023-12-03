@@ -189,9 +189,11 @@ int TestRegexSearch_MatchMoreThanOne_New()
     //const std::string input = "ABC:1->   PQR:2;;;   XYZ:3<<<";
     //const std::string re = "(\\w+):([[:digit:]])";//const std::string re = "(\\w+):(\\d)";
     
-    const std::string input = "http://10.203.60.5:9122/heartbeat?param=4&b=3";
-    //const std::string re = "^([A-Za-z]+):\\/\\/([0-9.\\-A-Za-z]+)(:([[:digit:]]+))?(\\/([^?#]*))?(\?([^#]*))?$";
-    const std::string re = "^([A-Za-z]+):\\/\\/([0-9A-Za-z\\.\\-]+)(:([0-9]+))?(\\/([^?#]*))?(\\?([^#]*))?$";
+    //const std::string input = "http://10.203.60.5:9122/heartbeat?param=4&b=3";
+    //const std::string re = "^([A-Za-z]+):\\/\\/([0-9A-Za-z\\.\\-]+)(:([0-9]+))?(\\/([^?#]*))?(\\?([^#]*))?$";
+
+    const std::string input = "HTTP/1.1 505 HTTP Version not supported";
+    const std::string re = "(HTTP\\/1\\.[01]) ([0-9]{3}) (.*)";
 
     Matchs matches;
     CppRegexSearchMatchAll(input, re, matches);

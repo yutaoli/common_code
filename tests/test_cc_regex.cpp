@@ -204,3 +204,33 @@ TEST(cc_regex, TestMatchHttpReqline)
     }
    // printf("now :%s\n", cc_time::CcTime::NowString().c_str());
 }
+
+TEST(cc_regex, TestMatchHttpRspline)
+{
+    const std::string input = "HTTP/1.1 505 HTTP Version not supported";
+    const std::string re = "(HTTP\\/1\\.[01]) ([0-9]{3}) (.*)";
+
+     int ret = 0;
+    for (unsigned int i = 0; i < 2; i++)// 把CRegexSearchMatchAll和CppRegexSearchMatchAll都测试一遍
+    {
+        Matchs c_matchs;
+        if (i == 0)
+        {
+            ret = CcRegex::CRegexSearchMatchAll(input, re, c_matchs);
+        }
+        else
+        {
+            ret = CcRegex::CppRegexSearchMatchAll(input, re, c_matchs);
+        }
+        //printf("ret:%d,i:%d,c_matchs.size:%u\n",ret,i,c_matchs.size());
+        CHECK(ret == 0);
+        CHECK(c_matchs.size() == 1);
+
+        CHECK(c_matchs[0].groups.size() == 4);
+        CHECK(c_matchs[0].groups[0].str == "HTTP/1.1 505 HTTP Version not supported");
+        CHECK(c_matchs[0].groups[1].str == "HTTP/1.1");
+        CHECK(c_matchs[0].groups[2].str == "505");
+        CHECK(c_matchs[0].groups[3].str == "HTTP Version not supported");
+    }
+   // printf("now :%s\n", cc_time::CcTime::NowString().c_str());
+}
