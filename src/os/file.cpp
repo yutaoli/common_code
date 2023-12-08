@@ -48,11 +48,11 @@ int File::ReadTheWholeFile(const char *file_name, std::string &file_out,std::str
      ret = ReadTheWholeFile(file_name, buffer, file_size, errmsg);
     if (ret != 0)
     {
-        goto end;
+        goto __end;
     }
 
     file_out.assign(buffer, file_size);
-end:
+__end:
     if (buffer != NULL)
     {
         delete[] buffer;
@@ -86,7 +86,7 @@ int File::ReadTheWholeFile(const char *file_name, char *buffer, size_t &buffer_s
         snprintf(msg, sizeof(msg), "fopen return null,file_name:%s,errno:%d", file_name, errno);
         errmsg = msg;
         ret = -2;
-        goto end;
+        goto __end;
     }
 
     fread_ret = fread(buffer, 1, file_size, fp);
@@ -97,12 +97,12 @@ int File::ReadTheWholeFile(const char *file_name, char *buffer, size_t &buffer_s
         errmsg = msg;
 
         ret = -3;
-        goto end;
+        goto __end;
     }
 
     buffer_size = file_size;
 
-end:
+__end:
     fclose(fp);
     return ret;
 }
@@ -127,7 +127,7 @@ int File::WriteTheWholeFile(const char *file_name, const char *buffer, size_t bu
     // 清空
     if (buffer_size == 0)
     {
-        goto end;
+        goto __end;
     }
 
     fwrite_ret = fwrite(buffer, 1, buffer_size, fp);
@@ -136,12 +136,12 @@ int File::WriteTheWholeFile(const char *file_name, const char *buffer, size_t bu
         snprintf(msg, sizeof(msg), "fwrite error,file_name:%s", file_name);
         errmsg = msg;
         ret = -1;
-        goto end;
+        goto __end;
     }
 
     fflush(fp);
 
-end:
+__end:
     fclose(fp);
     return ret;
 }

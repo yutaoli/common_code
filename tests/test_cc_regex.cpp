@@ -234,3 +234,46 @@ TEST(cc_regex, TestMatchHttpRspline)
     }
    // printf("now :%s\n", cc_time::CcTime::NowString().c_str());
 }
+
+TEST(cc_regex, TestMatchAllWord)
+{
+    const std::string input = "Hm....Err -- are you sure?' he said, sounding insecure";
+    const std::string re = "[a-zA-Z]+";
+
+     int ret = 0;
+    for (unsigned int i = 0; i < 2; i++)// 把CRegexSearchMatchAll和CppRegexSearchMatchAll都测试一遍
+    {
+        Matchs c_matchs;
+        if (i == 0)
+        {
+            ret = CcRegex::CRegexSearchMatchAll(input, re, c_matchs);
+        }
+        else
+        {
+            ret = CcRegex::CppRegexSearchMatchAll(input, re, c_matchs);
+        }
+        //printf("ret:%d,i:%d,c_matchs.size:%u\n",ret,i,c_matchs.size());
+        CHECK(ret == 0);
+        CHECK(c_matchs.size() == 9);
+
+        CHECK(c_matchs[0].groups.size() == 1);
+        CHECK(c_matchs[0].groups[0].str == "Hm");
+        CHECK(c_matchs[1].groups.size() == 1);
+        CHECK(c_matchs[1].groups[0].str == "Err");
+        CHECK(c_matchs[2].groups.size() == 1);
+        CHECK(c_matchs[2].groups[0].str == "are");
+        CHECK(c_matchs[3].groups.size() == 1);
+        CHECK(c_matchs[3].groups[0].str == "you");
+        CHECK(c_matchs[4].groups.size() == 1);
+        CHECK(c_matchs[4].groups[0].str == "sure");
+        CHECK(c_matchs[5].groups.size() == 1);
+        CHECK(c_matchs[5].groups[0].str == "he");
+        CHECK(c_matchs[6].groups.size() == 1);
+        CHECK(c_matchs[6].groups[0].str == "said");
+        CHECK(c_matchs[7].groups.size() == 1);
+        CHECK(c_matchs[7].groups[0].str == "sounding");
+        CHECK(c_matchs[8].groups.size() == 1);
+        CHECK(c_matchs[8].groups[0].str == "insecure");
+    }
+   // printf("now :%s\n", cc_time::CcTime::NowString().c_str());
+}
