@@ -95,10 +95,11 @@
 #endif
 
 #ifndef CPPHTTPLIB_THREAD_POOL_COUNT
-#define CPPHTTPLIB_THREAD_POOL_COUNT                                           \
+/*#define CPPHTTPLIB_THREAD_POOL_COUNT                                           \
   ((std::max)(8u, std::thread::hardware_concurrency() > 0                      \
                       ? std::thread::hardware_concurrency() - 1                \
-                      : 0))
+                      : 0))*/
+#define CPPHTTPLIB_THREAD_POOL_COUNT 1
 #endif
 
 #ifndef CPPHTTPLIB_RECV_FLAGS
@@ -293,6 +294,26 @@ namespace httplib {
 
 namespace detail {
 
+struct GroupResult
+{
+    GroupResult()
+    {
+        postion = 0;
+        length = 0;
+    }
+    std::string str;
+    unsigned int postion;
+    unsigned int length;
+};
+
+struct Match
+{
+    std::vector<GroupResult> groups; // 0:match, other:group
+};
+
+typedef std::vector<Match> Matchs;
+  int RegexMatch(const std::string &input, const std::string &re, Matchs &out_matchs);
+
 /*
  * Backport std::make_unique from C++14.
  *
@@ -474,7 +495,7 @@ struct Request {
   Params params;
   MultipartFormDataMap files;
   Ranges ranges;
-  Match matches;
+  detail::Matchs matches;
   std::unordered_map<std::string, std::string> path_params;
 
   // for client
@@ -734,7 +755,7 @@ public:
   bool match(Request &request) const override;
 
 private:
-  std::regex regex_;
+  std::string regex_;
 };
 
 ssize_t write_headers(Stream &strm, const Headers &headers);
@@ -1780,13 +1801,15 @@ inline void default_socket_options(socket_t sock) {
   setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
              reinterpret_cast<const char *>(&yes), sizeof(yes));
 #else
-#ifdef SO_REUSEPORT
+/*#ifdef SO_REUSEPORT
   setsockopt(sock, SOL_SOCKET, SO_REUSEPORT,
              reinterpret_cast<const void *>(&yes), sizeof(yes));
 #else
   setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
              reinterpret_cast<const void *>(&yes), sizeof(yes));
-#endif
+#endif*/
+ setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+             reinterpret_cast<const void *>(&yes), sizeof(yes));
 #endif
 }
 
@@ -2196,27 +2219,27 @@ class HttpSvr
   {
     if(stop_ == true) return 0;
     
-    if(t_.joinable())
-    {
-      stop_ = true;
-      // printf("%s in\n",__FUNCTION__);
-      svr_.stop();
-      t_.join();
-      printf("===The server stop ok...===\n");
-    }
+    stop_ = true;
+    //printf("%s in\n",__FUNCTION__);
+    svr_.stop();
+    t_.join();
 
     //printf("%s out\n",__FUNCTION__);
     return 0;
   }
 
   int Listen(const std::string &host, int port) {
-    t_ = std::thread([&] { svr_.listen(host, port); });
+    bool success = true;
+    t_ = std::thread([&] { success = svr_.listen(host, port); });
 
-    while(!svr_.is_running())
+    while(success && !svr_.is_running())
     {
       std::this_thread::sleep_for(std::chrono::milliseconds{1});
     }
     stop_ = false;
+
+    if(!success) return -1;
+    
     return 0;
   }
 

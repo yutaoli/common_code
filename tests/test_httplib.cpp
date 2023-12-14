@@ -16,7 +16,8 @@ TEST_GROUP(httplib){
         svr.Get("/test_get", ClientTestSvrHandler);
         svr.Post("/test_post", ClientTestSvrHandler);
 
-        http_svr.Listen("0.0.0.0", port);
+        int ret = http_svr.Listen("0.0.0.0", port);
+        CHECK(ret == 0);
         // client_test_log::WriteLog("===The server started at port:%d ok...===", port_);
         printf("===The server started at port:%d ok...===\n", port);
     }

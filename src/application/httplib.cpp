@@ -1,11 +1,121 @@
 #include "httplib.h"
+
+#ifdef _MSC_VER
+#include <regex>
+#else
+#include <regex.h>
+#include <sys/types.h>
+#endif
+
 namespace httplib {
 
 /*
  * Implementation that will be part of the .cc file if split into .h + .cc.
  */
-
 namespace detail {
+int RegexMatch(const std::string &input, const std::string &re, Matchs &out_matchs)
+{
+  #ifdef _MSC_VER
+    try{
+        const std::regex r(re.c_str());
+        std::vector<std::smatch> matches{
+            std::sregex_iterator{input.begin(), input.end(), r},
+            std::sregex_iterator{}};
+
+        out_matchs.clear();
+        for (unsigned int v_i = 0; v_i < matches.size(); v_i++)
+        {
+            std::smatch &match = matches[v_i];
+
+            Match cpp_match;
+            for (unsigned int i = 0; i < match.size(); i++)
+            {
+                GroupResult result;
+                result.postion = match.position(i);
+                result.length = match.length(i);
+                result.str = match[i].str();
+                cpp_match.groups.push_back(result);
+            }
+            out_matchs.push_back(cpp_match);
+        }
+    }
+    catch (const std::regex_error &e)
+    {
+        printf("regex_error:%s\n", e.what());
+        return -1;
+    }
+    return 0;
+    #else
+    
+    regex_t reg;
+    char errmsg[512] = {0};
+    int ret = 0;
+    if (0 != (ret = regcomp(&reg, re.data(), REG_EXTENDED))) 
+    {
+        regerror(ret,&reg,errmsg,sizeof(errmsg));
+        printf("regcomp ret:%d,errmsg:%s\n",ret,errmsg);
+        return -1;
+    }
+    
+    out_matchs.clear();
+    unsigned iLen = input.size();
+    unsigned nmatch = reg.re_nsub + 1;
+    regmatch_t pmatch[nmatch];
+
+    int offset = 0;
+    const char *buf = input.c_str();
+    int len = strlen(buf);
+    int status = 0;
+    while (offset < len)
+    {
+        status = regexec(&reg, buf, nmatch, pmatch, 0);
+        if (status != 0)
+        {
+            if (status != REG_NOMATCH)
+            {
+                regerror(status,&reg,errmsg,sizeof(errmsg));
+                printf("regexec ret:%d,errmsg:%s\n",ret,errmsg);
+                ret = status;
+                goto end;
+            }
+            else if (status == REG_NOMATCH)
+            {
+                ret = 0;
+                goto end;
+            }
+        }
+        else if (status == 0)
+        {
+            Match c_match;
+            for (unsigned i = 0; i < nmatch; ++i)
+            {
+                if (pmatch[i].rm_so == -1 || pmatch[i].rm_eo == -1)
+                {
+                    //printf("%u:rm_so:%d,rm_eo:%d\n",i,pmatch[i].rm_so,pmatch[i].rm_eo);
+                    c_match.groups.push_back(GroupResult());
+                    continue;
+                }
+
+                GroupResult result;
+                result.str.assign(buf + pmatch[i].rm_so, pmatch[i].rm_eo - pmatch[i].rm_so);
+                result.length = result.str.size();
+                result.postion = pmatch[i].rm_so + offset;
+                c_match.groups.push_back(result);
+                //printf("str%u:%s,position:%d\n", i, result.str.c_str(), pmatch[i].rm_so);
+            }
+            out_matchs.push_back(c_match);
+        }
+
+        offset += pmatch[0].rm_eo;
+        buf += pmatch[0].rm_eo;
+    }
+
+end:
+    // 释放正则表达式
+    regfree(&reg);
+    return ret;
+    #endif
+}
 
 bool is_hex(char c, int &v) {
   if (0x20 <= c && isdigit(c)) {
@@ -261,9 +371,12 @@ void read_file(const std::string &path, std::string &out) {
 }
 
 std::string file_extension(const std::string &path) {
-  std::smatch m;
-  static auto re = std::regex("\\.([a-zA-Z0-9]+)$");
-  if (std::regex_search(path, m, re)) { return m[1].str(); }
+  const std::string re = "\\.([a-zA-Z0-9]+)$";
+  Matchs matchs;
+  int ret = RegexMatch(path, re, matchs);
+  if (matchs.size() == 1 && matchs[0].groups.size() == 2)
+  return matchs[0].groups[1].str;
+
   return std::string();
 }
 
@@ -1150,7 +1263,7 @@ find_content_type(const std::string &path,
   auto it = user_data.find(ext);
   if (it != user_data.end()) { return it->second.c_str(); }
 
-  using udl::operator""_t;
+  using udl::operator"" _t;
 
   switch (str2tag(ext)) {
   default: return default_content_type;
@@ -1208,7 +1321,7 @@ find_content_type(const std::string &path,
 }
 
 bool can_compress_content_type(const std::string &content_type) {
-  using udl::operator""_t;
+  using udl::operator"" _t;
 
   auto tag = str2tag(content_type);
 
@@ -2047,6 +2160,7 @@ void parse_disposition_params(const std::string &s, Params &params) {
   });
 }
 
+/*
 #ifdef CPPHTTPLIB_NO_EXCEPTIONS
 bool parse_range_header(const std::string &s, Ranges &ranges) {
 #else
@@ -2088,8 +2202,9 @@ bool parse_range_header(const std::string &s, Ranges &ranges) try {
 #else
 } catch (...) { return false; }
 #endif
+*/
 
-class MultipartFormDataParser {
+/*class MultipartFormDataParser {
 public:
   MultipartFormDataParser() = default;
 
@@ -2325,7 +2440,7 @@ private:
   size_t buf_spos_ = 0;
   size_t buf_epos_ = 0;
 };
-
+*/
 std::string to_lower(const char *beg, const char *end) {
   std::string out;
   auto it = beg;
@@ -2799,7 +2914,7 @@ std::pair<std::string, std::string> make_digest_authentication_header(
 }
 #endif
 
-bool parse_www_authenticate(const Response &res,
+/*bool parse_www_authenticate(const Response &res,
                                    std::map<std::string, std::string> &auth,
                                    bool is_proxy) {
   auto auth_key = is_proxy ? "Proxy-Authenticate" : "WWW-Authenticate";
@@ -2830,7 +2945,7 @@ bool parse_www_authenticate(const Response &res,
     }
   }
   return false;
-}
+}*/
 
 // https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c/440240#answer-440240
 std::string random_string(size_t length) {
@@ -2903,8 +3018,12 @@ void hosted_at(const std::string &hostname,
 std::string append_query_params(const std::string &path,
                                        const Params &params) {
   std::string path_with_query = path;
-  const static std::regex re("[^?]+\\?.*");
-  auto delm = std::regex_match(path, re) ? '&' : '?';
+
+  const std::string re = "[^?]+\\?.*";
+  detail::Matchs matchs;
+  int ret = RegexMatch(path, re, matchs);
+  
+  auto delm = matchs.size() > 0 ? '&' : '?';
   path_with_query += delm + detail::params_to_query_str(params);
   return path_with_query;
 }
@@ -3274,7 +3393,7 @@ PathParamsMatcher::PathParamsMatcher(const std::string &pattern) {
 }
 
 bool PathParamsMatcher::match(Request &request) const {
-  request.matches = std::smatch();
+  //request.matches = std::smatch();
   request.path_params.clear();
   request.path_params.reserve(param_names_.size());
 
@@ -3318,7 +3437,9 @@ bool PathParamsMatcher::match(Request &request) const {
 
 bool RegexMatcher::match(Request &request) const {
   request.path_params.clear();
-  return std::regex_match(request.path, request.matches, regex_);
+
+  int ret = RegexMatch(request.path, regex_,request.matches);
+  return (ret == 0 && !request.matches.empty());
 }
 
 } // namespace detail
@@ -3843,33 +3964,12 @@ bool Server::read_content_core(Stream &strm, Request &req, Response &res,
                                       ContentReceiver receiver,
                                       MultipartContentHeader multipart_header,
                                       ContentReceiver multipart_receiver) {
-  detail::MultipartFormDataParser multipart_form_data_parser;
+  //detail::MultipartFormDataParser multipart_form_data_parser;
   ContentReceiverWithProgress out;
 
   if (req.is_multipart_form_data()) {
-    const auto &content_type = req.get_header_value("Content-Type");
-    std::string boundary;
-    if (!detail::parse_multipart_boundary(content_type, boundary)) {
-      res.status = 400;
-      return false;
-    }
-
-    multipart_form_data_parser.set_boundary(std::move(boundary));
-    out = [&](const char *buf, size_t n, uint64_t /*off*/, uint64_t /*len*/) {
-      /* For debug
-      size_t pos = 0;
-      while (pos < n) {
-        auto read_size = (std::min)<size_t>(1, n - pos);
-        auto ret = multipart_form_data_parser.parse(
-            buf + pos, read_size, multipart_receiver, multipart_header);
-        if (!ret) { return false; }
-        pos += read_size;
-      }
-      return true;
-      */
-      return multipart_form_data_parser.parse(buf, n, multipart_receiver,
-                                              multipart_header);
-    };
+    res.status = 505;// not support
+    return false;
   } else {
     out = [receiver](const char *buf, size_t n, uint64_t /*off*/,
                      uint64_t /*len*/) { return receiver(buf, n); };
@@ -3882,13 +3982,6 @@ bool Server::read_content_core(Stream &strm, Request &req, Response &res,
   if (!detail::read_content(strm, req, payload_max_length_, res.status, nullptr,
                             out, true)) {
     return false;
-  }
-
-  if (req.is_multipart_form_data()) {
-    if (!multipart_form_data_parser.is_valid()) {
-      res.status = 400;
-      return false;
-    }
   }
 
   return true;
@@ -4337,13 +4430,13 @@ Server::process_request(Stream &strm, bool close_connection,
   req.set_header("LOCAL_ADDR", req.local_addr);
   req.set_header("LOCAL_PORT", std::to_string(req.local_port));
 
-  if (req.has_header("Range")) {
+  /*if (req.has_header("Range")) {
     const auto &range_header_value = req.get_header_value("Range");
     if (!detail::parse_range_header(range_header_value, req.ranges)) {
       res.status = 416;
       return write_response(strm, close_connection, req, res);
     }
-  }
+  }*/
 
   if (setup_request) { setup_request(req); }
 
@@ -4563,26 +4656,32 @@ bool ClientImpl::read_response_line(Stream &strm, const Request &req,
 #ifdef CPPHTTPLIB_ALLOW_LF_AS_LINE_TERMINATOR
   const static std::regex re("(HTTP/1\\.[01]) (\\d{3})(?: (.*?))?\r?\n");
 #else
-  const static std::regex re("(HTTP/1\\.[01]) (\\d{3})(?: (.*?))?\r\n");
+  //const static std::regex re("(HTTP/1\\.[01]) (\\d{3})(?: (.*?))?\r\n");
+ const static std::string re = "(HTTP\\/1\\.[01]) ([0-9]{3}) (.*)\r\n";
 #endif
 
-  std::cmatch m;
-  if (!std::regex_match(line_reader.ptr(), m, re)) {
+  detail::Matchs matchs;
+  int ret = RegexMatch(line_reader.ptr(), re, matchs);
+  if(matchs.size() !=1 || matchs[0].groups.size() != 4) {
     return req.method == "CONNECT";
   }
-  res.version = std::string(m[1]);
-  res.status = std::stoi(std::string(m[2]));
-  res.reason = std::string(m[3]);
+  res.version = matchs[0].groups[1].str;
+  res.status = std::stoi(matchs[0].groups[2].str);
+  res.reason = matchs[0].groups[3].str;
 
   // Ignore '100 Continue'
   while (res.status == 100) {
     if (!line_reader.getline()) { return false; } // CRLF
     if (!line_reader.getline()) { return false; } // next response line
 
-    if (!std::regex_match(line_reader.ptr(), m, re)) { return false; }
-    res.version = std::string(m[1]);
-    res.status = std::stoi(std::string(m[2]));
-    res.reason = std::string(m[3]);
+    detail::Matchs matchs;
+  int ret = RegexMatch(line_reader.ptr(), re, matchs);
+  if(matchs.size() !=1 || matchs[0].groups.size() != 4) {
+    return false;
+  }
+    res.version = matchs[0].groups[1].str;
+    res.status = std::stoi(matchs[0].groups[2].str);
+    res.reason = matchs[0].groups[3].str;
   }
 
   return true;
@@ -4784,20 +4883,18 @@ bool ClientImpl::redirect(Request &req, Response &res, Error &error) {
   auto location = res.get_header_value("location");
   if (location.empty()) { return false; }
 
-  const static std::regex re(
-      R"((?:(https?):)?(?://(?:\[([\d:]+)\]|([^:/?#]+))(?::(\d+))?)?([^?#]*)(\?[^#]*)?(?:#.*)?)");
-
-  std::smatch m;
-  if (!std::regex_match(location, m, re)) { return false; }
+  const std::string re = "^([A-Za-z]+):\\/\\/([0-9A-Za-z\\.\\-]+)(:([0-9]+))?(\\/([^?#]*))?(\\?([^#]*))?$";
+  detail::Matchs matchs;
+  int ret = RegexMatch(location, re, matchs);
+  if(matchs.size() != 1) return false;
 
   auto scheme = is_ssl() ? "https" : "http";
 
-  auto next_scheme = m[1].str();
-  auto next_host = m[2].str();
-  if (next_host.empty()) { next_host = m[3].str(); }
-  auto port_str = m[4].str();
-  auto next_path = m[5].str();
-  auto next_query = m[6].str();
+  auto next_scheme = matchs[0].groups[1].str;
+  auto next_host = matchs[0].groups[2].str;
+  auto port_str = matchs[0].groups[4].str;
+  auto next_path = matchs[0].groups[5].str;
+  auto next_query = matchs[0].groups[7].str;
 
   auto next_port = port_;
   if (!port_str.empty()) {
@@ -6587,12 +6684,12 @@ Client::Client(const std::string &scheme_host_port)
 Client::Client(const std::string &scheme_host_port,
                       const std::string &client_cert_path,
                       const std::string &client_key_path) {
-  const static std::regex re(
-      R"((?:([a-z]+):\/\/)?(?:\[([\d:]+)\]|([^:/?#]+))(?::(\d+))?)");
-
-  std::smatch m;
-  if (std::regex_match(scheme_host_port, m, re)) {
-    auto scheme = m[1].str();
+  
+  const std::string re = "^([A-Za-z]+):\\/\\/([0-9A-Za-z\\.\\-]+)(:([0-9]+))?(\\/([^?#]*))?(\\?([^#]*))?$";
+  detail::Matchs matchs;
+  int ret = RegexMatch(scheme_host_port, re, matchs);
+  if (matchs.size() == 1) {
+    auto scheme = matchs[0].groups[1].str;
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
     if (!scheme.empty() && (scheme != "http" && scheme != "https")) {
@@ -6608,10 +6705,8 @@ Client::Client(const std::string &scheme_host_port,
 
     auto is_ssl = scheme == "https";
 
-    auto host = m[2].str();
-    if (host.empty()) { host = m[3].str(); }
-
-    auto port_str = m[4].str();
+    auto host = matchs[0].groups[2].str;
+    auto port_str = matchs[0].groups[4].str;
     auto port = !port_str.empty() ? std::stoi(port_str) : (is_ssl ? 443 : 80);
 
     if (is_ssl) {

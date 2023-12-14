@@ -317,6 +317,37 @@ int TestAtomicFetchAddAndFetchSub()
     return 0;
 }
 
+int TestThreadSyncMemoryFenceCpp11()
+{
+    int a = 0;
+    std::atomic<int> ready(0);
+
+    std::thread t1 = std::thread([&]{
+        a = 42;
+        std::atomic_thread_fence(std::memory_order_release);
+        ready.store(1, std::memory_order_relaxed);
+    });
+
+    std::thread t2 = std::thread([&]{
+        int r1 =  ready.load(std::memory_order_relaxed);
+        std::atomic_thread_fence(std::memory_order_acquire);
+        int r2 = a;
+    });
+
+    if(t1.joinable())
+    {
+        t1.join();
+    }
+    if(t2.joinable())
+    {
+        t2.join();
+    }
+    printf("a:%d,ready:%d\n",a,ready.load());
+     printf("===%s===\n",__FUNCTION__);
+    // TODO
+    return 0;
+}
+
 int main()
 {
     TestNormalAddAndSub();
@@ -327,21 +358,22 @@ int main()
     TestMutex(3);// works_lock_guard
     TestMutex(4);// works_atomic
     TestMutex(5);// works_atomic_relaxed
+
+    TestThreadSyncMemoryFenceCpp11();
     return 0;
 }
 /*
-
-count[0]:117
-count[1]:119
-count[2]:117
-count[3]:116
-count[4]:115
-count[5]:65
-count[6]:91
-count[7]:87
-count[8]:63
-count[9]:91
-TestNormalAddAndSub,timediff:sec:0,nsec:655893527
+count[0]:87
+count[1]:122
+count[2]:102
+count[3]:74
+count[4]:105
+count[5]:81
+count[6]:87
+count[7]:79
+count[8]:114
+count[9]:96
+TestNormalAddAndSub,timediff:sec:0,nsec:563561787
 TestNormalAddAndSub end
 
 atomic_count[0]:0
@@ -354,20 +386,20 @@ atomic_count[6]:0
 atomic_count[7]:0
 atomic_count[8]:0
 atomic_count[9]:0
-TestAtomicFetchAddAndFetchSub,timediff:sec:0,nsec:626664921
+TestAtomicFetchAddAndFetchSub,timediff:sec:0,nsec:552599021
 TestAtomicFetchAddAndFetchSub end
 
-count[0]:8
-count[1]:-1
-count[2]:18
-count[3]:-2
-count[4]:8
-count[5]:-4
-count[6]:0
-count[7]:-14
-count[8]:13
-count[9]:-6
-TestMutex,timediff:sec:0,nsec:324739287
+count[0]:-16
+count[1]:-8
+count[2]:11
+count[3]:1
+count[4]:0
+count[5]:-7
+count[6]:11
+count[7]:1
+count[8]:-9
+count[9]:15
+TestMutex,timediff:sec:0,nsec:272706825
 TestMutex,type:1 end
 
 count[0]:0
@@ -380,7 +412,7 @@ count[6]:0
 count[7]:0
 count[8]:0
 count[9]:0
-TestMutex,timediff:sec:10,nsec:710315668
+TestMutex,timediff:sec:10,nsec:733283391
 TestMutex,type:2 end
 
 count[0]:0
@@ -393,7 +425,7 @@ count[6]:0
 count[7]:0
 count[8]:0
 count[9]:0
-TestMutex,timediff:sec:10,nsec:714713305
+TestMutex,timediff:sec:10,nsec:710010143
 TestMutex,type:3 end
 
 atomic_count[0]:0
@@ -406,7 +438,7 @@ atomic_count[6]:0
 atomic_count[7]:0
 atomic_count[8]:0
 atomic_count[9]:0
-TestMutex,timediff:sec:0,nsec:320834711
+TestMutex,timediff:sec:0,nsec:272165847
 TestMutex,type:4 end
 
 atomic_count relaxed[0]:0
@@ -419,7 +451,9 @@ atomic_count relaxed[6]:0
 atomic_count relaxed[7]:0
 atomic_count relaxed[8]:0
 atomic_count relaxed[9]:0
-TestMutex,timediff:sec:0,nsec:319094726
+TestMutex,timediff:sec:0,nsec:274318948
 TestMutex,type:5 end
 
+a:42,ready:1
+===TestThreadSyncMemoryFenceCpp11===
    */
