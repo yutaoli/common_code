@@ -21,15 +21,39 @@ private:
     std::chrono::seconds last_time_stamp_;
 };
 
+//////
 class RateClientController
 {
 public:
+    RateClientController(const uint32_t rate);
+
+public:
+    void Wait();
+
+private:
+    // 当前时间
+    int64_t GetCurrTime();
+    // yield 单位(us)
+    void BusyWait(uint64_t nsec);
+
+private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> time_begin_;
+    uint32_t counter_;
+    uint32_t delay_interval_ns_;
 };
 
+//////
 class RateController
 {
 public:
+    RateController(unsigned int rate_per_second);
+
+public:
     bool CanAccess();
     void Wait();
+private:
+    RateServerController rate_server_controller_;
+    RateClientController rate_client_controller_;
+
 };
 #endif
