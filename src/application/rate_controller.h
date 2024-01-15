@@ -18,7 +18,7 @@ private:
     unsigned int capcity_;
     unsigned int water_;
     // std::chrono::time_point<std::chrono::high_resolution_clock> last_time_stamp_ns_;
-    std::chrono::seconds last_time_stamp_;
+    std::chrono::microseconds last_time_stamp_;
 };
 
 //////
