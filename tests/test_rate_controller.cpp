@@ -21,23 +21,24 @@ TEST(TestRateController, TestServerControllerOk)
 {
    unsigned int rate_per_second = 10;
    RateServerController rate_server_controller(rate_per_second);
+   bool busy_wait = true;
    for (unsigned int i = 0; i < rate_per_second; i++)
    {
-      bool can_access = rate_server_controller.CanAccess();
+      bool can_access = rate_server_controller.CanAccess(busy_wait);
       CHECK(can_access == true);
    }
 
    std::this_thread::sleep_for(std::chrono::milliseconds(10));
    for (unsigned int i = 0; i < rate_per_second; i++)
    {
-      bool can_access = rate_server_controller.CanAccess();
+      bool can_access = rate_server_controller.CanAccess(busy_wait);
       CHECK(can_access == false);
    }
 
    std::this_thread::sleep_for(std::chrono::seconds(1));
    for (unsigned int i = 0; i < rate_per_second; i++)
    {
-      bool can_access = rate_server_controller.CanAccess();
+      bool can_access = rate_server_controller.CanAccess(busy_wait);
       CHECK(can_access == true);
    }
 }
@@ -179,37 +180,45 @@ TEST(TestRateController, TestControllerConnectionFailLongTime)
    RateController rate_controller(rate_per_second);
 
    std::chrono::time_point<std::chrono::high_resolution_clock> t0 = std::chrono::high_resolution_clock::now();
-   unsigned int req_count = 60000;
+   int req_count = 6000000;
    srand(time(NULL));
-   unsigned int i = 0;
+   int i = 0;
+   int finish_i = 0;
 
    // TimerThread
    std::thread t = std::thread([&]{ 
-      unsigned int last_update_i = i;
-      unsigned int now_i = 0;
-      unsigned int qps = 0;
-      while( i < req_count)
+       int last_update_i = -1;
+       int now_i = 0;
+       unsigned int qps = 0;
+      while( finish_i < req_count)
       {
          std::this_thread::sleep_for(std::chrono::seconds(1));
-         now_i = i;
+         now_i = finish_i;// (last_update_i, finish_i]
          qps = (now_i - last_update_i);// qps
-         //printf("last_update_i:%u,now_i:%u,qps:%u\n",last_update_i,now_i,qps);
+         printf("last_update_i:%d,now_i:%d,qps:%u\n",last_update_i,now_i,qps);
          
          last_update_i = now_i;
-      } 
-   });
+      } });
 
    // 主线程
-   for(; i < req_count; i++)
+   for (; i < req_count; i++)
    {
-      if(rate_controller.CanAccess() == false) i = (i == 0 ? 0 : i - 1);
-
-      if (i == req_count/10)// 模拟掉坑10s
+      if (rate_controller.CanAccess() == false)
       {
-         //printf("chose:%d\n",1);
+         i = (i == 0 ? 0 : i - 1);
+         // printf("main thread begin i:%u\n",i);
+         continue;
+      }
+
+      //if (i == rate_per_second * 5 || i == rate_per_second * 20) // 模拟第5s掉坑10s，第15s掉坑10s
+      if (i == rate_per_second * 5) // 模拟第5s掉坑10s
+      {
+         printf("chose:%d\n", 1);
          std::this_thread::sleep_for(std::chrono::seconds(10));
       }
-      std::this_thread::sleep_for(std::chrono::microseconds(rand()%200));// 模拟process延迟
+      std::this_thread::sleep_for(std::chrono::microseconds(rand() % 2)); // 模拟process延迟
+      finish_i = i;
+      //printf("main thread out finish_i:%d\n", finish_i);
       rate_controller.Wait();
    }
 
@@ -226,46 +235,60 @@ TEST(TestRateController, TestControllerConnectionFailLongTime)
       t.join();
 
    /*
-   last_update_i:0,now_i:2000,qps:2000
-last_update_i:2000,now_i:4000,qps:2000
-chose:1
-last_update_i:4000,now_i:6000,qps:2000
-last_update_i:6000,now_i:6000,qps:0<--掉坑
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6000,qps:0
-last_update_i:6000,now_i:6007,qps:7<--开始恢复
-last_update_i:6007,now_i:8005,qps:1998<--无陡增
-last_update_i:8005,now_i:10004,qps:1999<--无陡增
-last_update_i:10004,now_i:12006,qps:2002
-last_update_i:12006,now_i:14002,qps:1996
-last_update_i:14002,now_i:16002,qps:2000
-last_update_i:16002,now_i:18002,qps:2000
-last_update_i:18002,now_i:20002,qps:2000
-last_update_i:20002,now_i:22002,qps:2000
-last_update_i:22002,now_i:24003,qps:2001
-last_update_i:24003,now_i:26003,qps:2000
-last_update_i:26003,now_i:28003,qps:2000
-last_update_i:28003,now_i:30003,qps:2000
-last_update_i:30003,now_i:32003,qps:2000
-last_update_i:32003,now_i:34003,qps:2000
-last_update_i:34003,now_i:36003,qps:2000
-last_update_i:36003,now_i:38003,qps:2000
-last_update_i:38003,now_i:40004,qps:2001
-last_update_i:40004,now_i:42004,qps:2000
-last_update_i:42004,now_i:44004,qps:2000
-last_update_i:44004,now_i:46004,qps:2000
-last_update_i:46004,now_i:48004,qps:2000
-last_update_i:48004,now_i:50004,qps:2000
-last_update_i:50004,now_i:52004,qps:2000
-last_update_i:52004,now_i:54005,qps:2001
-last_update_i:54005,now_i:56005,qps:2000
-last_update_i:56005,now_i:58005,qps:2000
-last_update_i:58005,now_i:60000,qps:1995
+   last_update_i:-1,now_i:10001,qps:10002
+last_update_i:10001,now_i:20001,qps:10000
+last_update_i:20001,now_i:30001,qps:10000
+last_update_i:30001,now_i:40003,qps:10002
+chose:1<---开始掉坑
+last_update_i:40003,now_i:49999,qps:9996<---掉坑
+last_update_i:49999,now_i:49999,qps:0<---掉坑
+last_update_i:49999,now_i:49999,qps:0<---掉坑
+last_update_i:49999,now_i:49999,qps:0
+last_update_i:49999,now_i:49999,qps:0
+last_update_i:49999,now_i:49999,qps:0
+last_update_i:49999,now_i:49999,qps:0
+last_update_i:49999,now_i:49999,qps:0
+last_update_i:49999,now_i:49999,qps:0
+last_update_i:49999,now_i:49999,qps:0
+delay_ns:-9999993305,count:50001,delay_interval_ns_:100000,time_diff:15000093305,busy_wait_:0,diff:10000139729
+add water, water_:0,timestamp:1706753695.50400
+add water, water_:0,timestamp:1706753695.50500
+add water, water_:0,timestamp:1706753695.50600
+add water, water_:0,timestamp:1706753695.50700
+add water, water_:0,timestamp:1706753695.50819
+add water, water_:0,timestamp:1706753695.50919
+add water, water_:0,timestamp:1706753695.51019
+add water, water_:0,timestamp:1706753695.51119
+add water, water_:0,timestamp:1706753695.51219
+add water, water_:0,timestamp:1706753695.51319
+last_update_i:49999,now_i:50010,qps:11
+add water, water_:0,timestamp:1706753695.51419
+add water, water_:0,timestamp:1706753695.51519
+add water, water_:0,timestamp:1706753695.51619
+add water, water_:0,timestamp:1706753695.51719
+add water, water_:0,timestamp:1706753695.51819
+add water, water_:0,timestamp:1706753695.51919
+。。。。。。
+（中间类似的省略）
+。。。。。。
+add water, water_:0,timestamp:1706753695.76982
+add water, water_:0,timestamp:1706753695.77082
+add water, water_:0,timestamp:1706753695.77182
+add water, water_:0,timestamp:1706753695.77282
+add water, water_:0,timestamp:1706753695.77382
+add water, water_:0,timestamp:1706753695.77482
+add water, water_:0,timestamp:1706753695.77582
+add water, water_:0,timestamp:1706753695.77682
+last_update_i:50010,now_i:60008,qps:9998<---开始恢复，无陡增；
+last_update_i:60008,now_i:70009,qps:10001<---开始恢复，无陡增；
+last_update_i:70009,now_i:80009,qps:10000
+last_update_i:80009,now_i:90010,qps:10001
+last_update_i:90010,now_i:100011,qps:10001
+。。。。。。
+（中间类似的省略）
+。。。。。。
+last_update_i:400027,now_i:410028,qps:10001
+last_update_i:410028,now_i:420028,qps:10000
+last_update_i:420028,now_i:430029,qps:10001
    */
 }

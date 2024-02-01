@@ -11,24 +11,27 @@ public:
     virtual ~RateServerController();
 
 public:
-    bool CanAccess();
+    bool CanAccess(bool busy_wait);
 
 private:
-    unsigned int rate_per_second_;
-    unsigned int capcity_;
-    unsigned int water_;
+    long long rate_per_second_;
+    long long capcity_;
+    long long water_;
     // std::chrono::time_point<std::chrono::high_resolution_clock> last_time_stamp_ns_;
     std::chrono::microseconds last_time_stamp_;
+
+    static constexpr long long g_transfer_times = 1000000;
 };
 
 //////
 class RateClientController
 {
 public:
-    RateClientController(const uint32_t rate);
+    RateClientController(const uint32_t rate, unsigned int max_delay_us = 200 * 1000);
 
 public:
     void Wait();
+    bool BusyWait();
 
 private:
     // 当前时间
@@ -38,15 +41,19 @@ private:
 
 private:
     std::chrono::time_point<std::chrono::high_resolution_clock> time_begin_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_update_time_clock_;
     uint32_t counter_;
-    uint32_t delay_interval_ns_;
+    uint32_t delay_interval_ns_;// 0 为不等（不限速）；>0为限速
+    bool busy_wait_;// true：限速；false：不限速；
+
+    unsigned int max_delay_us_;
 };
 
 //////
 class RateController
 {
 public:
-    RateController(unsigned int rate_per_second);
+    RateController(unsigned int rate_per_second, unsigned int max_delay_us = 200 * 1000);
 
 public:
     bool CanAccess();
