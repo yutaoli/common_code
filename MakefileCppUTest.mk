@@ -55,7 +55,7 @@ CPPUTEST_WARNINGFLAGS = -Wall -Wswitch-default -Werror
 CPPUTEST_CFLAGS += -fPIC
 #CPPUTEST_CFLAGS += -Wall -Wstrict-prototypes -pedantic
 CPPUTEST_CPPFLAGS += -fPIC -fpermissive -w
-LD_LIBRARIES = -lpthread -lrt $(LIB_CRC)
+LD_LIBRARIES = -lpthread -lrt $(LIB_CRC) -lcrypto
 	
   
 ifeq ($(CPPUTEST_HOME),)

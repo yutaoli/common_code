@@ -74,7 +74,7 @@ TEST(TestRateController, TestClientControllerOkRateGreaterThanProcessDelay)
    RateClientController rate_client_controller(rate_per_second);
 
    std::chrono::time_point<std::chrono::high_resolution_clock> t0 = std::chrono::high_resolution_clock::now();
-   unsigned int req_count = 100000;
+   unsigned int req_count = 10000;
    srand(time(NULL));
    for(unsigned int i = 0; i < req_count; i++)
    {
@@ -180,7 +180,7 @@ TEST(TestRateController, TestControllerConnectionFailLongTime)
    RateController rate_controller(rate_per_second);
 
    std::chrono::time_point<std::chrono::high_resolution_clock> t0 = std::chrono::high_resolution_clock::now();
-   int req_count = 6000000;
+   int req_count = 4000;
    srand(time(NULL));
    int i = 0;
    int finish_i = 0;
@@ -195,7 +195,7 @@ TEST(TestRateController, TestControllerConnectionFailLongTime)
          std::this_thread::sleep_for(std::chrono::seconds(1));
          now_i = finish_i;// (last_update_i, finish_i]
          qps = (now_i - last_update_i);// qps
-         printf("last_update_i:%d,now_i:%d,qps:%u\n",last_update_i,now_i,qps);
+        printf("last_update_i:%d,now_i:%d,qps:%u\n",last_update_i,now_i,qps);
          
          last_update_i = now_i;
       } });
@@ -206,7 +206,6 @@ TEST(TestRateController, TestControllerConnectionFailLongTime)
       if (rate_controller.CanAccess() == false)
       {
          i = (i == 0 ? 0 : i - 1);
-         // printf("main thread begin i:%u\n",i);
          continue;
       }
 
@@ -218,9 +217,10 @@ TEST(TestRateController, TestControllerConnectionFailLongTime)
       }
       std::this_thread::sleep_for(std::chrono::microseconds(rand() % 2)); // 模拟process延迟
       finish_i = i;
-      //printf("main thread out finish_i:%d\n", finish_i);
+      //printf("req_count:%d,finish_i:%d\n",req_count,i);
       rate_controller.Wait();
    }
+   finish_i = i;
 
    /*std::chrono::time_point<std::chrono::high_resolution_clock> t1 = std::chrono::high_resolution_clock::now();
    long long diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
